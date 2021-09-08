@@ -5,6 +5,32 @@ services:
   hepsiyemekdb:
     image : mongo
 
+  redis:
+    container_name: redis
+    hostname: redis
+    image: redis
+    command: --port 6379
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    volumes:
+      - type: volume
+        #source: redis-data
+        target: /data
+    restart: always
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8082:8081"
+    volumes:
+      - ./storage/redis/data:/data
+
   hepsiyemek.products:
     image: ${DOCKER_REGISTRY-}hepsiyemekproducts
     build:
