@@ -1,18 +1,15 @@
 ﻿using HepsiYemek.Core.Utilities.Response;
-using HepsiYemek.Products.Dtos;
-using System;
+using HepsiYemek.Products.Entities;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace HepsiYemek.Products.Services.Abstract
 {
     public interface ICategoryService
     {
-        Task<Response<List<CategoryDto>>> GetAllAsync();
+        Task<Response<IEnumerable<Category>>> GetCategories();
 
-        Task<Response<CategoryDto>> CreateAsync(CategoryDto category);
+        Task<Response<Category>> GetCategory(string id);
 
-        Task<Response<CategoryDto>> GetByIdAsync(string id);
     }
 }

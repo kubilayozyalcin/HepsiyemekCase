@@ -1,0 +1,13 @@
+version: '3.4'
+
+
+services:
+  hepsiyemekdb:
+    image : mongo
+
+  hepsiyemek.products:
+    image: ${DOCKER_REGISTRY-}hepsiyemekproducts
+    build:
+      context: .
+      dockerfile: Services/HepsiYemek.Products/Dockerfile
+

@@ -1,15 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using HepsiYemek.Products.Data.Abstract;
+using HepsiYemek.Products.Data.Concrete;
+using HepsiYemek.Products.Services.Abstract;
+using HepsiYemek.Products.Services.Concrete;
 using HepsiYemek.Products.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
@@ -28,20 +26,6 @@ namespace HepsiYemek.Products
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
-
-            #region Add_AutoMapper
-            services.AddAutoMapper(typeof(Startup));
-            #endregion
-
-            #region Database_Settings_Configure
-            services.Configure<DatabaseSettings>(Configuration.GetSection("DatabaseSettings"));
-
-            services.AddSingleton<IDatabaseSettings>(sp =>
-            {
-                return sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
-            });
-            #endregion
 
             #region EventBus
 
@@ -76,10 +60,29 @@ namespace HepsiYemek.Products
 
             #endregion
 
+            #region Configuration Dependencies
+            services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
+            services.AddSingleton<IDatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
+            #endregion
+
+            #region Project Dependencies
+            services.AddTransient<ISourcingContext, SourcingContext>();
+            services.AddTransient<IProductService, ProductService>();
+            #endregion
+
+            #region Swagger Dependencies
+            services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HepsiYemek.Products", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "HepsiYemek.Products",
+                    Version = "v1"
+                });
             });
+            #endregion
+
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
