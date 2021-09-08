@@ -2,6 +2,7 @@ using HepsiYemek.Products.Data.Abstract;
 using HepsiYemek.Products.Data.Concrete;
 using HepsiYemek.Products.Services.Abstract;
 using HepsiYemek.Products.Services.Concrete;
+using HepsiYemek.Products.Services.Redis;
 using HepsiYemek.Products.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,41 +25,7 @@ namespace HepsiYemek.Products
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {
-
-
-            #region EventBus
-
-            //services.AddSingleton<IRabbitMQPersistentConnection>(sp => {
-            //    var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
-
-            //    var factory = new ConnectionFactory()
-            //    {
-            //        HostName = Configuration["EventBus:HostName"]
-            //    };
-
-            //    if (!string.IsNullOrWhiteSpace(Configuration["EventBus:UserName"]))
-            //    {
-            //        factory.UserName = Configuration["EventBus:UserName"];
-            //    }
-
-            //    if (!string.IsNullOrWhiteSpace(Configuration["EventBus:Password"]))
-            //    {
-            //        factory.UserName = Configuration["EventBus:Password"];
-            //    }
-
-            //    var retryCount = 5;
-            //    if (!string.IsNullOrWhiteSpace(Configuration["EventBus:RetryCount"]))
-            //    {
-            //        retryCount = int.Parse(Configuration["EventBus:RetryCount"]);
-            //    }
-
-            //    return new DefaultRabbitMQPersistentConnection(factory, retryCount, logger);
-            //});
-
-            //services.AddSingleton<EventBusOrderCreateConsumer>();
-
-            #endregion
+        {          
 
             #region Configuration Dependencies
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
@@ -68,6 +35,21 @@ namespace HepsiYemek.Products
             #region Project Dependencies
             services.AddTransient<ISourcingContext, SourcingContext>();
             services.AddTransient<IProductService, ProductService>();
+            #endregion
+
+            #region Redis Caching
+            services.Configure<RedisSettings>(Configuration.GetSection("RedisSettings"));
+
+            services.AddSingleton<RedisService>(sp =>
+            {
+                var redisSettings = sp.GetRequiredService<IOptions<RedisSettings>>().Value;
+
+                var redis = new RedisService(redisSettings.Host, redisSettings.Port);
+
+                redis.Connect();
+
+                return redis;
+            });
             #endregion
 
             #region Swagger Dependencies

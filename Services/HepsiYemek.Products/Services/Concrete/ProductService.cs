@@ -3,10 +3,13 @@ using HepsiYemek.Core.Utilities.Response;
 using HepsiYemek.Products.Data.Abstract;
 using HepsiYemek.Products.Entities;
 using HepsiYemek.Products.Services.Abstract;
+using HepsiYemek.Products.Services.Redis;
 using Microsoft.AspNetCore.Http;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace HepsiYemek.Products.Services.Concrete
@@ -15,14 +18,16 @@ namespace HepsiYemek.Products.Services.Concrete
     {
 
         private readonly ISourcingContext _sorucingcontext;
+        private readonly RedisService _redisService;
 
-        public ProductService(ISourcingContext sorucingcontext)
+        public ProductService(ISourcingContext sorucingcontext, RedisService redisService)
         {
             _sorucingcontext = sorucingcontext;
+            _redisService = redisService;
         }
 
         public async Task<Response<IEnumerable<Product>>> GetProducts()
-        {
+        {           
             var products = await _sorucingcontext.Products.Find(p => true).ToListAsync();
 
             if (products.Any())
@@ -39,10 +44,19 @@ namespace HepsiYemek.Products.Services.Concrete
 
             return Response<IEnumerable<Product>>.Success((products), StatusCodes.Status200OK);
         }
-
+        // Add Redis Cache Product
         public async Task<Response<Product>> GetProduct(string id)
         {
+            var existBasket = await _redisService.GetDb().StringGetAsync(id);
+
+            if (!String.IsNullOrEmpty(existBasket))
+                return Response<Product>.Success(JsonSerializer.Deserialize<Product>(existBasket), StatusCodes.Status200OK);
+           
+
             var product = await _sorucingcontext.Products.Find(p => p.Id == id).FirstOrDefaultAsync();
+
+            await _redisService.GetDb().StringSetAsync(product.Id, JsonSerializer.Serialize(product));
+
 
             if (product == null)
                 return Response<Product>.Fail(Messages.ProductNotFound, StatusCodes.Status404NotFound);
