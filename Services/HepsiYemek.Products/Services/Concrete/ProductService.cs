@@ -47,10 +47,10 @@ namespace HepsiYemek.Products.Services.Concrete
         // Add Redis Cache Product
         public async Task<Response<Product>> GetProduct(string id)
         {
-            var existBasket = await _redisService.GetDb().StringGetAsync(id);
+            var existProduct = await _redisService.GetDb().StringGetAsync(id);
 
-            if (!String.IsNullOrEmpty(existBasket))
-                return Response<Product>.Success(JsonSerializer.Deserialize<Product>(existBasket), StatusCodes.Status200OK);
+            if (!String.IsNullOrEmpty(existProduct))
+                return Response<Product>.Success(JsonSerializer.Deserialize<Product>(existProduct), StatusCodes.Status200OK);
            
 
             var product = await _sorucingcontext.Products.Find(p => p.Id == id).FirstOrDefaultAsync();
